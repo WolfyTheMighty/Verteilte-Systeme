@@ -1,3 +1,5 @@
+import org.junit.Test;
+
 import java.net.*;
 import java.io.*;
 
@@ -8,7 +10,7 @@ public class Server_Fib {
     private BufferedReader in;
 
     public static void main(String[] args) {
-         Server_Fib server=new Server_Fib();
+        Server_Fib server = new Server_Fib();
         server.start(6868);
     }
 
@@ -16,23 +18,18 @@ public class Server_Fib {
     }
 
     private static int generateFibonacci(int n) {
-        if (n > 1) return generateFibonacci(n - 2) + generateFibonacci(n - 1);
+        if (n > 1) return generateFibonacci(n - 1) + generateFibonacci(n - 2);
         return n;
     }
 
     public void start(int port) {
         try {
-            ServerSocket serverSocket = new ServerSocket(6868);
-            Socket socket = serverSocket.accept();
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            if ("hi".equals(in.readLine())) {
-                out.println("hello client");
-                out.println(generateFibonacci(9));
-            }
-            else {
-                out.println("unrecognised greeting");
-            }
+            serverSocket = new ServerSocket(6868);
+            clientSocket = serverSocket.accept();
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            out.println(generateFibonacci(Integer.parseInt(in.readLine())));
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -48,4 +45,5 @@ public class Server_Fib {
             e.printStackTrace();
         }
     }
+
 }
