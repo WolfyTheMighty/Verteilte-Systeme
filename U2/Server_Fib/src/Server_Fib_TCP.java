@@ -1,20 +1,18 @@
-import org.junit.Test;
-
 import java.net.*;
 import java.io.*;
 
-public class Server_Fib {
+public class Server_Fib_TCP {
     private ServerSocket serverSocket;
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
 
     public static void main(String[] args) {
-        Server_Fib server = new Server_Fib();
+        Server_Fib_TCP server = new Server_Fib_TCP();
         server.start(6868);
     }
 
-    public Server_Fib() {
+    public Server_Fib_TCP() {
     }
 
     private static int generateFibonacci(int n) {

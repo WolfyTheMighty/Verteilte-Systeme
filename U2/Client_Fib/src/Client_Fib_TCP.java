@@ -1,12 +1,12 @@
 import java.net.*;
 import java.io.*;
 
-public class Client {
+public class Client_Fib_TCP {
 
     public static void main(String[] args) {
         Integer fib = 9;
 
-        Client client = new Client();
+        Client_Fib_TCP client = new Client_Fib_TCP();
         client.startConnection("localhost", 6868);
         System.out.println(client.sendMessage(fib.toString()));
     }
