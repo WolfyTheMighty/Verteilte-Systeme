@@ -1,25 +1,23 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.io.PrintWriter;
+import java.net.*;
 
-public class BroadcastReciever extends Thread{
+public class BroadcastReciever implements Runnable{
     private DatagramSocket socket;
     private boolean running;
     private byte[] buf = new byte[256];
     private int port;
 
-    public BroadcastReciever(int port) throws IOException {
+    public BroadcastReciever(int port) {
         this.port = port;
-        socket = new DatagramSocket(port);
+
     }
 
 
     @Override
     public void run() {
             try {
-
+                socket = new DatagramSocket(port);
                 // Ein Bytearray f�r die empfangenen Nachrichten wird erstellt
                 byte[] buf = new byte[512];
 
@@ -37,11 +35,11 @@ public class BroadcastReciever extends Thread{
                 String sourceIP = clientAddress.getHostAddress();
                 int clientPortnumber = packet.getPort();
 
-                System.out.println("Server: habe eine Nachricht erhalten von " + sourceIP + ":"+ clientPortnumber);
-                System.out.println("Server: "+ receivedMessage);
+                System.out.println("Broadcast Reciever: habe eine Nachricht erhalten von " + sourceIP + ":"+ clientPortnumber);
+                System.out.println("Broadcast Reciever: "+ receivedMessage);
 
                 // Server erstellt Nachricht f�r die Antwort auf den Server
-                String msgToSend = "Hallo Client, ich bin der Server!";
+                String msgToSend = "Server hat den Broadcast erhalten!!";
 
                 // Stringnachricht wird in ein Bytearray �bersetzt
                 buf = msgToSend.getBytes();
@@ -52,10 +50,32 @@ public class BroadcastReciever extends Thread{
                 // UDP Paket wird gesendet
                 socket.send(packetToClient);
 
+                //Fibonacci server wird gefragt nach dem wert der Zahl 17
+                sendFibRequest(17);
+                socket.close();
+//                run();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
+        }
+    //Aufgabe B 2b Fibonacci Server wird kontaktiert um den wert 17 auszurechnen
+        private static void sendFibRequest(Integer n){
+            try {
+
+                Socket tcpClient = new Socket("localhost", 6868);
+                // Printwriter wird zum einfachen Schreiben von Stringnachrichten erstellt
+                PrintWriter outputWriter = new PrintWriter(tcpClient.getOutputStream());
+
+                // Stringnachricht wird in den outputstream geschrieben
+                outputWriter.println(n.toString());
+
+                //Der outputstream wird geleert,d.h. werden sofort verschickt.
+                outputWriter.flush();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 }
 

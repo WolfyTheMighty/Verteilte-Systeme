@@ -14,6 +14,8 @@ public class NetworkAccesPoints {
     public static ArrayList<InetAddress> inetAddresses = new ArrayList<>();
 
     public static void main(String[] args) {
+
+        //Ausgabe der Netzwerkschnittstellen Aufgabe B 1a und 1b
         try {
             Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
             for (NetworkInterface netint : Collections.list(nets)) {
@@ -22,17 +24,22 @@ public class NetworkAccesPoints {
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        out.println("\n\n\n\n");
-        try {
-            BroadcastReciever server_fib_udp= new BroadcastReciever(9876);
-            server_fib_udp.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        out.println("\n\n\n\n"); // Trennung der Ausgaben auf der konsole der übersichts halber
 
+
+        //Aufgabe B 2a Start des Braodcast recievers
+        BroadcastReciever server_fib_udp= new BroadcastReciever(9876);
+        Thread broadcastRecieverThread = new Thread(server_fib_udp);
+        broadcastRecieverThread.start();
+
+        //Aufgabe B 1d Start des Fibonacci Servers
+        Server_Fib_TCP server_fib_tcp= new Server_Fib_TCP(6868);
+        Thread fib_Server_Thread = new Thread(server_fib_tcp);
+        fib_Server_Thread.start();
+
+
+        //Aufgabe B 1c - alle 5 sekunden einen Broadcast verschicken
         sendTimedPacket(5);
-
-
     }
 
     private static void sendTimedPacket(int t){
@@ -41,7 +48,7 @@ public class NetworkAccesPoints {
                 DatagramSocket udpClient = new DatagramSocket();
                 String msgToSend = "Dieser Server wurden von der Gruppe [A01] implementiert und stellt die \n" +
                         "Fibonacci-Funktion als Dienst bereit. Um den Dienst zu nutzen, senden Sie eine \n" +
-                        "Nachricht an Port [9876] auf diesem Server. Das \n" +
+                        "Nachricht an Port [6868] auf diesem Server. Das \n" +
                         "Format der Nachricht sollte folgendermaßen aussehen [Fibonacci Zahl als String].";
                 byte[] buf = msgToSend.getBytes();
 
@@ -57,9 +64,10 @@ public class NetworkAccesPoints {
 
                     udpClient.receive(packetResponse);
                     String receivedMessage = new String(packetResponse.getData());
-                    System.out.println("Client: " + receivedMessage);
-
+                    System.out.println("Broadcast Client: " + receivedMessage);
+//                    udpClient.close();
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -92,10 +100,10 @@ public class NetworkAccesPoints {
 
             if (inetAddress.getAddress() instanceof Inet4Address) {
 
-                out.printf(" IPV4 InetAddress: %s\n", inetAddress.getAddress());
-                out.printf(" IPV4 Broadcast: %s\n", inetAddress.getBroadcast());
+                out.printf(" IPV4 InetAddress: %s\n", inetAddress.getAddress().toString().replace("/", ""));
+                out.printf(" IPV4 Broadcast: %s\n", inetAddress.getBroadcast().toString().replace("/", ""));
                 NetworkAccesPoints.inetAddresses.add(inetAddress.getBroadcast());
-                out.printf(" IPV4 binary InetAddress: %s\n", toBinary(inetAddress.getAddress().toString()));
+                out.printf(" IPV4 binary InetAddress: %s\n", toBinary(inetAddress.getAddress().toString().replace("/", "")));
             } else if (inetAddress.getAddress() instanceof Inet6Address) {
 //                IPv6 defines at least three reachability scopes for addresses:
 //
@@ -110,8 +118,8 @@ public class NetworkAccesPoints {
 //
 
                 //link-local because the address begins with fe80, The number after the '%' is the scope ID.
-                out.printf(" IPV6 InetAddress: %s\n", inetAddress);
-                out.printf(" IPV6 binary InetAddress: %s\n", toBinary(inetAddress.getAddress().toString()));
+                out.printf(" IPV6 InetAddress: %s\n", inetAddress.toString().replace("/", ""));
+                out.printf(" IPV6 binary InetAddress: %s\n", toBinary(inetAddress.getAddress().toString().replace("/", "")));
             }
         }
     }
