@@ -18,17 +18,11 @@ public class BroadcastReciever implements Runnable{
     public void run() {
             try {
                 socket = new DatagramSocket(port);
-                // Ein Bytearray f�r die empfangenen Nachrichten wird erstellt
                 byte[] buf = new byte[512];
-
-                // Ein UDP Paket wird erstellt, der den Bytearray als Datenpuffer erh�lt
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
-
-                // Auf den Eingang eines Datenpakets wird gewartet
                 socket.receive(packet);
 
-                // Empfangene Nachricht wird in String umgewandelt
-                String receivedMessage = new String(packet.getData());
+                String receivedMessage = new String(packet.getData()).replaceAll("\u0000.*", "");;
 
                 // Verbindungsdaten des Client werden ausgelesen (IP und Port)
                 InetAddress clientAddress = packet.getAddress();
@@ -39,7 +33,7 @@ public class BroadcastReciever implements Runnable{
                 System.out.println("Broadcast Reciever: "+ receivedMessage);
 
                 // Server erstellt Nachricht f�r die Antwort auf den Server
-                String msgToSend = "Server hat den Broadcast erhalten!!";
+                String msgToSend = "Server hat den Broadcast erhalten!";
 
                 // Stringnachricht wird in ein Bytearray �bersetzt
                 buf = msgToSend.getBytes();
@@ -50,8 +44,8 @@ public class BroadcastReciever implements Runnable{
                 // UDP Paket wird gesendet
                 socket.send(packetToClient);
 
-                //Fibonacci server wird gefragt nach dem wert der Zahl 17
-                sendFibRequest(17);
+                //Aufgabe B 2b Fibonacci Server wird kontaktiert um den wert 17 auszurechnen
+                sendMessage("17");
                 socket.close();
 //                run();
             } catch (IOException e) {
@@ -59,23 +53,45 @@ public class BroadcastReciever implements Runnable{
             }
 
         }
-    //Aufgabe B 2b Fibonacci Server wird kontaktiert um den wert 17 auszurechnen
-        private static void sendFibRequest(Integer n){
+
+        private static void sendMessage(String n){
+//            try {
+//
+//                Socket tcpClient = new Socket("localhost", 6868);
+//                // Printwriter wird zum einfachen Schreiben von Stringnachrichten erstellt
+//                PrintWriter outputWriter = new PrintWriter(tcpClient.getOutputStream());
+//
+//                // Stringnachricht wird in den outputstream geschrieben
+//                outputWriter.println(n.toString());
+//
+//                //Der outputstream wird geleert,d.h. werden sofort verschickt.
+//                outputWriter.flush();
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             try {
+                DatagramSocket udpClient = new DatagramSocket();
+                String msgToSend =  n;
+                byte[] buf = msgToSend.getBytes();
 
-                Socket tcpClient = new Socket("localhost", 6868);
-                // Printwriter wird zum einfachen Schreiben von Stringnachrichten erstellt
-                PrintWriter outputWriter = new PrintWriter(tcpClient.getOutputStream());
+                InetAddress targetAddress = InetAddress.getByName("localhost");
 
-                // Stringnachricht wird in den outputstream geschrieben
-                outputWriter.println(n.toString());
+                DatagramPacket packetToSend = new DatagramPacket(buf, 0, buf.length, targetAddress, 6868);
 
-                //Der outputstream wird geleert,d.h. werden sofort verschickt.
-                outputWriter.flush();
+                udpClient.send(packetToSend);
 
+                buf = new byte[256];
+                DatagramPacket packetResponse = new DatagramPacket(buf, buf.length);
+
+                udpClient.receive(packetResponse);
+                String receivedMessage = new String(packetResponse.getData()).replaceAll("\u0000.*", "");
+                System.out.println("Client: "+ receivedMessage);
+//                sendMessage("Answer Confirmed");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+
 }
 

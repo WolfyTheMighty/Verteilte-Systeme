@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,13 +29,13 @@ public class NetworkAccesPoints {
 
 
         //Aufgabe B 2a Start des Braodcast recievers
-        BroadcastReciever server_fib_udp= new BroadcastReciever(9876);
-        Thread broadcastRecieverThread = new Thread(server_fib_udp);
+        BroadcastReciever broadcastReciever = new BroadcastReciever(9876);
+        Thread broadcastRecieverThread = new Thread(broadcastReciever);
         broadcastRecieverThread.start();
 
         //Aufgabe B 1d Start des Fibonacci Servers
-        Server_Fib_TCP server_fib_tcp= new Server_Fib_TCP(6868);
-        Thread fib_Server_Thread = new Thread(server_fib_tcp);
+        Server_Fib_UDP server_fib_udp = new Server_Fib_UDP(6868);
+        Thread fib_Server_Thread = new Thread(server_fib_udp);
         fib_Server_Thread.start();
 
 
@@ -42,7 +43,7 @@ public class NetworkAccesPoints {
         sendTimedPacket(5);
     }
 
-    private static void sendTimedPacket(int t){
+    private static void sendTimedPacket(int t) {
         Runnable timedPacket = () -> {
             try {
                 DatagramSocket udpClient = new DatagramSocket();
@@ -55,7 +56,7 @@ public class NetworkAccesPoints {
                 for (InetAddress targetAddress : inetAddresses) {
 
 
-                    DatagramPacket packetToSend = new DatagramPacket(buf, 0, buf.length, targetAddress, 9876 );
+                    DatagramPacket packetToSend = new DatagramPacket(buf, 0, buf.length, targetAddress, 9876);
 
                     udpClient.send(packetToSend);
 
@@ -63,7 +64,7 @@ public class NetworkAccesPoints {
                     DatagramPacket packetResponse = new DatagramPacket(buf, buf.length);
 
                     udpClient.receive(packetResponse);
-                    String receivedMessage = new String(packetResponse.getData());
+                    String receivedMessage = new String(packetResponse.getData()).replaceAll("\u0000.*", "");;
                     System.out.println("Broadcast Client: " + receivedMessage);
 //                    udpClient.close();
                 }
@@ -103,7 +104,7 @@ public class NetworkAccesPoints {
                 out.printf(" IPV4 InetAddress: %s\n", inetAddress.getAddress().toString().replace("/", ""));
                 out.printf(" IPV4 Broadcast: %s\n", inetAddress.getBroadcast().toString().replace("/", ""));
                 NetworkAccesPoints.inetAddresses.add(inetAddress.getBroadcast());
-                out.printf(" IPV4 binary InetAddress: %s\n", toBinary(inetAddress.getAddress().toString().replace("/", "")));
+                out.printf(" IPV4 binary InetAddress: %s\n", ipv4toBinary(inetAddress.getAddress().toString().replace("/", "")));
             } else if (inetAddress.getAddress() instanceof Inet6Address) {
 //                IPv6 defines at least three reachability scopes for addresses:
 //
@@ -119,24 +120,34 @@ public class NetworkAccesPoints {
 
                 //link-local because the address begins with fe80, The number after the '%' is the scope ID.
                 out.printf(" IPV6 InetAddress: %s\n", inetAddress.toString().replace("/", ""));
-                out.printf(" IPV6 binary InetAddress: %s\n", toBinary(inetAddress.getAddress().toString().replace("/", "")));
+                out.printf(" IPV6 binary InetAddress: %s\n", ipv6toBinary(inetAddress.getAddress().toString().replace("/", "")));
             }
         }
     }
 
-    //https://mkyong.com/java/java-convert-string-to-binary/
-    public static String toBinary(String input) {
 
-        StringBuilder result = new StringBuilder();
-        char[] chars = input.toCharArray();
-        for (char aChar : chars) {
-            result.append(
-                    String.format("%8s", Integer.toBinaryString(aChar))
-                            .replaceAll(" ", "0")
-            );
+    public static String ipv4toBinary(String ip) {
+
+        String[] spl = ip.split("\\.");
+        String result = "", del = "";
+        for (String s : spl) {
+//            s = s.split("%")[0];
+            result += del
+                    + String.format("%8s", new BigInteger(s, 10).toString(2)).replace(' ', '0');
+            del = " ";
         }
-        return result.toString();
-
+        return result;
+    }
+    public static String ipv6toBinary(String ip) {
+        String[] spl = ip.split(":");
+        String result = "", del = "";
+        for (String s : spl) {
+           s = s.split("%")[0];
+            result += del
+                    + String.format("%16s", new BigInteger(s, 16).toString(2)).replace(' ', '0');
+            del = " ";
+        }
+        return result;
     }
 
 }
