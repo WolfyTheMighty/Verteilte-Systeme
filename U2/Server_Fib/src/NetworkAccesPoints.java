@@ -11,7 +11,12 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.out;
 
+/**
+ * Gibt infos über Netzwerkschnittstellen und beinhaltet den großteil der gestellten aufaben als startpunkt
+ */
 public class NetworkAccesPoints {
+
+    //zum Speichern der Broadcast ip-adressen
     public static ArrayList<InetAddress> inetAddresses = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -25,15 +30,16 @@ public class NetworkAccesPoints {
         } catch (SocketException e) {
             e.printStackTrace();
         }
+
         out.println("\n\n\n\n"); // Trennung der Ausgaben auf der konsole der übersichts halber
 
 
-        //Aufgabe B 2a Start des Braodcast recievers
+        //Aufgabe B 2a Start des Braodcast recievers im seperatem Thread
         BroadcastReciever broadcastReciever = new BroadcastReciever(9876);
         Thread broadcastRecieverThread = new Thread(broadcastReciever);
         broadcastRecieverThread.start();
 
-        //Aufgabe B 1d Start des Fibonacci Servers
+        //Aufgabe B 1d Start des Fibonacci Servers im sepereatem Thread
         Server_Fib_UDP server_fib_udp = new Server_Fib_UDP(6868);
         Thread fib_Server_Thread = new Thread(server_fib_udp);
         fib_Server_Thread.start();
@@ -43,7 +49,13 @@ public class NetworkAccesPoints {
         sendTimedPacket(5);
     }
 
+    /**
+     * Sendet an alle gespeicherten broadcast ip adressen im bestimmten intervall eine nachricht
+     * @param t intervall in sek.
+     */
     private static void sendTimedPacket(int t) {
+
+        //deffinition der funktion zur späteren wiederholung durch ScheduledExecutor
         Runnable timedPacket = () -> {
             try {
                 DatagramSocket udpClient = new DatagramSocket();
@@ -73,12 +85,18 @@ public class NetworkAccesPoints {
                 e.printStackTrace();
             }
         };
+
+        //wiederholung des runnable als executor
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(timedPacket, 0, t, TimeUnit.SECONDS);
 
     }
 
-
+    /**
+     * Gibt informationen name ip-adresse und deren binäre darstellung
+     * @param netint Network interface wofür infos ausgegeben werden sollen
+     * @throws SocketException
+     */
     static void displayInterfaceInformation(NetworkInterface netint) throws SocketException {
         out.printf("\n\nDisplay name: %s\n", netint.getDisplayName());
         out.printf("Name: %s\n", netint.getName());
@@ -99,12 +117,22 @@ public class NetworkAccesPoints {
 //            Broadcast addressing as a distinct addressing method is gone in IPv6. Broadcast functionality is implemented using multicast addressing to groups of devices. A multicast group to which all nodes belong can be used for broadcasting in a network, for example.
 //            An important implication of the creation of anycast addressing is removal of the strict uniqueness requirement for IP addresses. Anycast is accomplished by assigning the same IP address to more than one device. The devices must also be specifically told that they are sharing an anycast address, but the addresses themselves are structurally the same as unicast addresses.
 
+            //Ausgabe der Adresse typs ipv4
             if (inetAddress.getAddress() instanceof Inet4Address) {
 
+                //ip adresse
                 out.printf(" IPV4 InetAddress: %s\n", inetAddress.getAddress().toString().replace("/", ""));
+
+                //zugehörige broadcast adresse
                 out.printf(" IPV4 Broadcast: %s\n", inetAddress.getBroadcast().toString().replace("/", ""));
+
+               //hinzufügen zur liste aller broadcast adressen für späteren broadcast
                 NetworkAccesPoints.inetAddresses.add(inetAddress.getBroadcast());
+
+               //binäre Darstellung der adresse
                 out.printf(" IPV4 binary InetAddress: %s\n", ipv4toBinary(inetAddress.getAddress().toString().replace("/", "")));
+
+            //Ausgabe der Adresse typs ipv6
             } else if (inetAddress.getAddress() instanceof Inet6Address) {
 //                IPv6 defines at least three reachability scopes for addresses:
 //
@@ -119,13 +147,20 @@ public class NetworkAccesPoints {
 //
 
                 //link-local because the address begins with fe80, The number after the '%' is the scope ID.
+
+               //ausgabe der ip adresse
                 out.printf(" IPV6 InetAddress: %s\n", inetAddress.toString().replace("/", ""));
+                //binäre darstellung
                 out.printf(" IPV6 binary InetAddress: %s\n", ipv6toBinary(inetAddress.getAddress().toString().replace("/", "")));
             }
         }
     }
 
-
+    /**
+     * Wandelt eine ipv4 adresse in eine binäre darstellung um
+     * @param ip ip adresse die umgewandelt werden soll als string
+     * @return binäre darstellung als String
+     */
     public static String ipv4toBinary(String ip) {
 
         String[] spl = ip.split("\\.");
@@ -138,6 +173,11 @@ public class NetworkAccesPoints {
         }
         return result;
     }
+    /**
+     * Wandelt eine ipv4 adresse in eine binäre darstellung um
+     * @param ip ip adresse die umgewandelt werden soll
+     * @return binäre darstellung als String
+     */
     public static String ipv6toBinary(String ip) {
         String[] spl = ip.split(":");
         String result = "", del = "";
